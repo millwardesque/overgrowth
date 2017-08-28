@@ -23,6 +23,8 @@ Essential
 . Weed generator
 . Highlight active weed
 - Player can pull weeds
+	- Pulling shifts weed Y coordinate?
+	- Once root tip is above ground, weed is out
 - Player pull animation
 - Game-over state
 - Game restart
@@ -37,6 +39,7 @@ Important
 - Interesting setting
 - Multiple types / grow patterns for weeds
 - Multiple 'tops' of weeds (aesthetic only)
+- Sound FX for weed pull
 
 Nice-to-have
 - High score
@@ -49,3 +52,5 @@ Nice-to-have
 - Flame thrower
 - Lawn mower
 - Animated background elements (clouds, etc.)
+- Weed root branching underground
+- Background music
