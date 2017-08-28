@@ -21,7 +21,7 @@ Essential
 . Weeds grow up
 . Weeds grow down
 . Weed generator
-- Highlight active weed
+. Highlight active weed
 - Player can pull weeds
 - Player pull animation
 - Game-over state

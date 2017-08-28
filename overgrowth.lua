@@ -17,8 +17,11 @@ function _init()
 	attach_renderable(player, 1)
 	add(scene, player)
 
+	-- Weed highlighter
+	make_weed_highlighter(player, 48)
+
 	-- Weeds
-	g_weed_generator.init(8, 60) 
+	g_weed_generator.init(16, 60) 
 	g_weed_generator.generate_weed()
 end
 
@@ -130,10 +133,37 @@ function attach_renderable(game_obj, sprite)
 end
 
 --
+-- Create the weed highlighter
+--
+function make_weed_highlighter(owner, sprite)
+	local highlighter = make_game_object("highlighter", 0, -8)
+	highlighter.owner = owner
+	attach_renderable(highlighter, sprite)
+
+	highlighter.update = function (self)
+		local my_center = 8 / 2
+		local owner_center = owner.position.x + (8 / 2)	-- Hardcoded to an owner width of 8px
+		local column = g_weed_generator.pixel_to_column(owner_center)
+		self.position.x = g_weed_generator.column_to_pixel(column) - my_center
+
+		local weed = g_weed_generator.weeds[column]
+		if weed ~= nil then
+			self.position.y = weed.position.y - weed.weed.stem_height - 8 - (8 / 2) - 2	-- Draw highlighter above the weed
+		else
+			self.position.y = -8	-- Offscreen
+		end
+	end
+
+	add(scene, highlighter)
+
+	return highlighter
+end
+
+--
 -- Weed
 --
 function make_weed(column, sprite, stem_max_height, stem_growth_rate, stem_colour, root_max_height, root_growth_rate, root_colour)
-	local weed = make_game_object("weed_"..column, g_weed_generator.weed_column_to_pixel(column), g_game_config.ground_height)
+	local weed = make_game_object("weed_"..column, g_weed_generator.column_to_pixel(column), g_game_config.ground_height)
 
 	weed.weed = {
 		stem_height = 0,
@@ -240,8 +270,8 @@ g_weed_generator.generate_weed = function ()
 	end
 
 	-- Choose a column at random
-	local column = flr(rnd(#available_cols)) + 1
-	column = available_cols[column]
+	local index = flr(rnd(#available_cols)) + 1
+	column = available_cols[index]
 
 	-- Generate random params
 	local sprite = 32
@@ -263,10 +293,16 @@ end
 --
 -- Gets the worldspace x-coordinate associated with a weed column
 --
-g_weed_generator.weed_column_to_pixel = function(column)
-	return column * g_weed_generator.weed_width + flr(g_weed_generator.weed_width / 2)
+g_weed_generator.column_to_pixel = function(column)
+	return (column - 1) * g_weed_generator.weed_width + flr(g_weed_generator.weed_width / 2)
 end
 
+--
+-- Gets the column that contains a worldspace x-coordinate
+--
+g_weed_generator.pixel_to_column = function(x)
+	return flr(x / g_weed_generator.weed_width) + 1
+end
 
 --
 -- Renderer subsystem
