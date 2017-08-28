@@ -2,7 +2,6 @@ scene = {}
 player = {}
 main_camera = {}
 g_game_config = {
-	weed_width = 4,	-- Pixels wide per weed. 128 / 4 = 32 weeds per game
 	ground_height = 64,	-- Height of the first ground pixel
 }
 
@@ -14,13 +13,13 @@ function _init()
 	local player_start_x = 128 / 2 -- Middle of the screen
 	local player_start_y = g_game_config.ground_height - player_height -- 1px above the ground
 	player = make_game_object("player", player_start_x, player_start_y)
-	player.speed = 3
+	player.speed = 2
 	attach_renderable(player, 1)
 	add(scene, player)
 
 	-- Weeds
-	local test_weed = make_weed(3, 32)
-	add(scene, test_weed) 
+	g_weed_generator.init(8, 60) 
+	g_weed_generator.generate_weed()
 end
 
 function _update()
@@ -52,6 +51,9 @@ function _update()
 	elseif player.position.x + player_width > 127 then
 		player.position.x = 127 - player_width
 	end
+
+	-- Update weed generator
+	g_weed_generator.update()
 
 	-- Update game objects
 	for game_obj in all(scene) do
@@ -130,23 +132,25 @@ end
 --
 -- Weed
 --
-function make_weed(column, sprite)
-	local weed = make_game_object("weed_"..column, weed_column_to_pixel(column), g_game_config.ground_height)
+function make_weed(column, sprite, stem_max_height, stem_growth_rate, stem_colour, root_max_height, root_growth_rate, root_colour)
+	local weed = make_game_object("weed_"..column, g_weed_generator.weed_column_to_pixel(column), g_game_config.ground_height)
 
 	weed.weed = {
 		stem_height = 0,
-		stem_max_height = 20,
-		stem_growth_rate = 1,
-		stem_colour = 3,
+		stem_max_height = stem_max_height,
+		stem_growth_rate = stem_growth_rate,
+		stem_colour = stem_colour,
 		root_height = 0,
-		root_max_height = 10,
-		root_growth_rate = 1,
-		root_colour = 5,
+		root_max_height = root_max_height,
+		root_growth_rate = root_growth_rate,
+		root_colour = root_colour,
 	}
 	attach_renderable(weed, sprite)
 
+	--
+	-- Update the weed
+	--
 	weed.update = function (self)
-		-- Update stem and root height
 		if self.weed.stem_height < self.weed.stem_max_height then
 			self.weed.stem_height += self.weed.stem_growth_rate
 
@@ -164,6 +168,9 @@ function make_weed(column, sprite)
 		end
 	end
 
+	--
+	-- Custom function for rendering the weed
+	--
 	weed.renderable.render = function(self, position)
 		local weed = self.game_obj.weed
 
@@ -181,9 +188,85 @@ function make_weed(column, sprite)
 	return weed
 end
 
-function weed_column_to_pixel(column)
-	return column * g_game_config.weed_width + flr(g_game_config.weed_width / 2)
+-- 
+-- Weed generator
+g_weed_generator = {
+	weed_width = 1,	-- Pixels wide per weed. 128 / 4 = 32 weeds per game
+	weeds = {},
+	time_between_weeds = 1,
+	time_until_weed = 0,
+}
+
+g_weed_generator.init = function(weed_width, time_between_weeds)
+	local self = g_weed_generator
+
+	self.weed_width = weed_width
+	self.time_between_weeds = time_between_weeds
+	self.time_until_weed = time_between_weeds
+
+	for col = 1, self.columns() do
+		self.weeds[col] = nil
+	end
 end
+
+g_weed_generator.update = function()
+	local self = g_weed_generator
+	self.time_until_weed -= 1
+
+	if self.time_until_weed == 0 then
+		self.generate_weed()
+		self.time_until_weed = self.time_between_weeds
+	end
+end
+
+g_weed_generator.columns = function ()
+	return flr(128 / g_weed_generator.weed_width)
+end
+
+g_weed_generator.generate_weed = function ()
+	local self = g_weed_generator
+
+	-- Find available columns
+	available_cols = {}
+	for col = 1, self.columns() do
+		if self.weeds[col] == nil then
+			add(available_cols, col)
+		end
+	end
+
+	-- Don't generate a weed if there's no space left
+	if #available_cols == 0 then
+		return
+	end
+
+	-- Choose a column at random
+	local column = flr(rnd(#available_cols)) + 1
+	column = available_cols[column]
+
+	-- Generate random params
+	local sprite = 32
+	
+	local stem_max_height = flr(rnd(32)) + 20
+	local stem_growth_rate = 0.1 + rnd(90) / 100
+	local stem_colour = 3
+	
+	local root_max_height = flr(rnd(32)) + 20
+	local root_growth_rate = 0.1 + rnd(90) / 100
+	local root_colour = 5
+
+	-- Construct the weed
+	local weed = make_weed(column, sprite, stem_max_height, stem_growth_rate, stem_colour, root_max_height, root_growth_rate, root_colour)
+	self.weeds[column] = weed
+	add(scene, weed)
+end
+
+--
+-- Gets the worldspace x-coordinate associated with a weed column
+--
+g_weed_generator.weed_column_to_pixel = function(column)
+	return column * g_weed_generator.weed_width + flr(g_weed_generator.weed_width / 2)
+end
+
 
 --
 -- Renderer subsystem
@@ -202,7 +285,7 @@ g_renderer.render = function()
 		end
 	end
 
-	-- @TODO layer / depth-sort?
+	-- @TODO Depth-sort?
 
 	-- Draw the scene
 	camera_draw_start(main_camera)
