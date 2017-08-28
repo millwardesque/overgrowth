@@ -18,19 +18,13 @@ function _init()
 	attach_renderable(player, 1)
 	add(scene, player)
 
-	-- @TODO Ground height
-	-- @TODO Player starting position.
-
-	-- Ground
-
-	-- Sky
-
 	-- Weeds
+	local test_weed = make_weed(3, 32)
+	add(scene, test_weed) 
 end
 
 function _update()
-	g_log.log("CPU: "..stat(1))
-
+	-- Process input
 	player_movement = make_vec2(0, 0)
 	if btn(0) then
 		player_movement.x -= player.speed
@@ -40,6 +34,15 @@ function _update()
 		player_movement.x += player.speed
 	end
 
+	if btn(4) then
+		-- @TODO Weed
+	end
+
+	if btn(5) then
+		-- @TODO Activate Powerup
+	end
+
+	-- Process player movement changes
 	player.position += player_movement
 
 	-- Keep the player inside the screen bounds
@@ -50,13 +53,14 @@ function _update()
 		player.position.x = 127 - player_width
 	end
 
-	if btn(4) then
-		-- @TODO Weed
+	-- Update game objects
+	for game_obj in all(scene) do
+		if (game_obj.update) then
+			game_obj.update(game_obj)
+		end
 	end
 
-	if btn(5) then
-		-- @TODO Powerup
-	end
+	g_log.log("CPU: "..stat(1))
 end
 
 function _draw()
@@ -81,6 +85,7 @@ end
 --
 function attach_renderable(game_obj, sprite)
 	local renderable = {
+		game_obj = game_obj,
 		sprite = sprite,
 		flip_x = false,
 		flip_y = false,
@@ -115,8 +120,69 @@ function attach_renderable(game_obj, sprite)
 		end
 	end
 
+	-- Save the default render function in case the object wants to use it in an overridden render function.
+	renderable.default_render = renderable.render
+
 	game_obj.renderable = renderable;
 	return game_obj;
+end
+
+--
+-- Weed
+--
+function make_weed(column, sprite)
+	local weed = make_game_object("weed_"..column, weed_column_to_pixel(column), g_game_config.ground_height)
+
+	weed.weed = {
+		stem_height = 0,
+		stem_max_height = 20,
+		stem_growth_rate = 1,
+		stem_colour = 3,
+		root_height = 0,
+		root_max_height = 10,
+		root_growth_rate = 1,
+		root_colour = 5,
+	}
+	attach_renderable(weed, sprite)
+
+	weed.update = function (self)
+		-- Update stem and root height
+		if self.weed.stem_height < self.weed.stem_max_height then
+			self.weed.stem_height += self.weed.stem_growth_rate
+
+			if self.weed.stem_height > self.weed.stem_max_height then
+				self.weed.stem_height = self.weed.stem_max_height				
+			end
+		end
+
+		if self.weed.root_height < self.weed.root_max_height then
+			self.weed.root_height += self.weed.root_growth_rate
+			
+			if self.weed.root_height > self.weed.root_max_height then
+				self.weed.root_height = self.weed.root_max_height				
+			end
+		end
+	end
+
+	weed.renderable.render = function(self, position)
+		local weed = self.game_obj.weed
+
+		-- Draw the stem
+		line(position.x, position.y, position.x, position.y - weed.stem_height, weed.stem_colour)
+
+		-- Draw the roots
+		line(position.x, position.y + 1, position.x, position.y + 1 + weed.root_height, weed.root_colour)
+
+		-- Draw the flower
+		local flower_position = position - make_vec2(8 / 2, weed.stem_height + 8 / 2)	-- Draw the center of the flower to be at the top of the stem
+		self.default_render(self, flower_position)
+	end
+
+	return weed
+end
+
+function weed_column_to_pixel(column)
+	return column * g_game_config.weed_width + flr(g_game_config.weed_width / 2)
 end
 
 --
@@ -182,7 +248,6 @@ function camera_draw_end(cam)
 	camera()
 	clip()
 end
-
 
 --
 -- 2d Vector

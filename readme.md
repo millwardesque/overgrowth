@@ -16,8 +16,11 @@ Overview
 
 Essential
 . Player moves left and right
-- Basic sky / ground
-- Weeds grow
+. Basic sky / ground
+. Weeds
+. Weeds grow up
+. Weeds grow down
+- Weed generator
 - Highlight active weed
 - Player can pull weeds
 - Player pull animation
@@ -26,20 +29,23 @@ Essential
 - Game-over screen
 - Score-keeping
 - Score display
+
+Important
+- Animated player
 - Powerup: Faster weed pulling
 - Powerup: Faster movement
+- Interesting setting
+- Multiple types / grow patterns for weeds
+- Multiple 'tops' of weeds (aesthetic only)
 
 Nice-to-have
+- High score
 - Gradient static sky
+- More varied ground map
 - Sunrise / sunset fades
 - Camera shake when the weed is removed
-- High score
-- Animated player
 - Animated roots
-- Multiple 'tops' of weeds (aesthetic only)
-- Multiple types / grow patterns for weeds
+- Different colours for weeds
 - Flame thrower
 - Lawn mower
-- Different colours for weeds
-- Interesting setting
-- Background
+- Animated background elements (clouds, etc.)
