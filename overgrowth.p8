@@ -15,10 +15,7 @@ function _init()
 	local player_height = 8
 	local player_start_x = 128 / 2 -- Middle of the screen
 	local player_start_y = g_game_config.ground_height - player_height -- 1px above the ground
-	player = make_game_object("player", player_start_x, player_start_y)
-	player.speed = 2
-	attach_renderable(player, 1)
-	add(scene, player)
+	player = make_player("player", player_start_x, player_start_y, 1, 2, 5)
 
 	-- Weed highlighter
 	make_weed_highlighter(player, 48)
@@ -39,8 +36,8 @@ function _update()
 		player_movement.x += player.speed
 	end
 
-	if btn(4) then
-		-- @TODO Weed
+	if btnp(4) then
+		player.pull_weed(player)
 	end
 
 	if btn(5) then
@@ -136,6 +133,27 @@ function attach_renderable(game_obj, sprite)
 end
 
 --
+-- Create a player
+function make_player(name, start_x, start_y, sprite, speed, strength)
+	local new_player = make_game_object(name, start_x, start_y)
+	new_player.speed = speed
+	new_player.strength = strength
+	attach_renderable(new_player, sprite)
+	new_player.pull_weed = function(self)
+		local center = self.position.x + (8 / 2)	-- Hardcoded to player width of 8px
+		local column = g_weed_generator.pixel_to_column(center)
+		local weed = g_weed_generator.get_weed(column)
+
+		if weed ~= nil then
+			weed.weed.pull_offset += self.strength
+		end
+	end
+
+	add(scene, new_player)
+	return new_player
+end
+
+--
 -- Create the weed highlighter
 --
 function make_weed_highlighter(owner, sprite)
@@ -177,6 +195,7 @@ function make_weed(column, sprite, stem_max_height, stem_growth_rate, stem_colou
 		root_max_height = root_max_height,
 		root_growth_rate = root_growth_rate,
 		root_colour = root_colour,
+		pull_offset = 0,
 	}
 	attach_renderable(weed, sprite)
 
@@ -184,6 +203,10 @@ function make_weed(column, sprite, stem_max_height, stem_growth_rate, stem_colou
 	-- Update the weed
 	--
 	weed.update = function (self)
+		if (self.position.y + self.weed.root_height < g_game_config.ground_height) then
+			-- @TODO Destroy weed
+		end
+
 		if self.weed.stem_height < self.weed.stem_max_height then
 			self.weed.stem_height += self.weed.stem_growth_rate
 
@@ -207,14 +230,16 @@ function make_weed(column, sprite, stem_max_height, stem_growth_rate, stem_colou
 	weed.renderable.render = function(self, position)
 		local weed = self.game_obj.weed
 
+		local adjusted_y_position = position.y - weed.pull_offset;
+
 		-- Draw the stem
-		line(position.x, position.y, position.x, position.y - weed.stem_height, weed.stem_colour)
+		line(position.x, adjusted_y_position, position.x, adjusted_y_position - weed.stem_height, weed.stem_colour)
 
 		-- Draw the roots
-		line(position.x, position.y + 1, position.x, position.y + 1 + weed.root_height, weed.root_colour)
+		line(position.x, adjusted_y_position + 1, position.x, adjusted_y_position + 1 + weed.root_height, weed.root_colour)
 
 		-- Draw the flower
-		local flower_position = position - make_vec2(8 / 2, weed.stem_height + 8 / 2)	-- Draw the center of the flower to be at the top of the stem
+		local flower_position = make_vec2(position.x, adjusted_y_position) - make_vec2(8 / 2, weed.stem_height + 8 / 2)	-- Draw the center of the flower to be at the top of the stem
 		self.default_render(self, flower_position)
 	end
 
@@ -223,6 +248,7 @@ end
 
 -- 
 -- Weed generator
+--
 g_weed_generator = {
 	weed_width = 1,	-- Pixels wide per weed. 128 / 4 = 32 weeds per game
 	weeds = {},
@@ -230,6 +256,9 @@ g_weed_generator = {
 	time_until_weed = 0,
 }
 
+--
+-- Initialize the weed generator
+--
 g_weed_generator.init = function(weed_width, time_between_weeds)
 	local self = g_weed_generator
 
@@ -242,6 +271,9 @@ g_weed_generator.init = function(weed_width, time_between_weeds)
 	end
 end
 
+--
+-- Update the weed generator
+--
 g_weed_generator.update = function()
 	local self = g_weed_generator
 	self.time_until_weed -= 1
@@ -252,10 +284,22 @@ g_weed_generator.update = function()
 	end
 end
 
+--
+-- Gets the number of weed columns in the game
+--
 g_weed_generator.columns = function ()
 	return flr(128 / g_weed_generator.weed_width)
 end
 
+--
+-- Gets the weed at a column if there is one. If not, returns nil.
+g_weed_generator.get_weed = function (column) 
+	return g_weed_generator.weeds[column]
+end
+
+--
+-- Generates a weed in an open column
+--
 g_weed_generator.generate_weed = function ()
 	local self = g_weed_generator
 

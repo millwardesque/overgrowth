@@ -25,7 +25,7 @@ Essential
 - Player can pull weeds
 	- Pulling shifts weed Y coordinate?
 	- Once root tip is above ground, weed is out
-- Player pull animation
+	- Player pull animation
 - Game-over state
 - Game restart
 - Game-over screen
@@ -40,6 +40,7 @@ Important
 - Multiple types / grow patterns for weeds
 - Multiple 'tops' of weeds (aesthetic only)
 - Sound FX for weed pull
+- Title screen
 
 Nice-to-have
 - High score
