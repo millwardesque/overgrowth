@@ -15,18 +15,19 @@ Overview
 	- Flame-thrower can remove one full-height weed but not the root
 
 Essential
-- Player moves left and right
-- Player can pull weeds
+. Player moves left and right
+- Basic sky / ground
 - Weeds grow
-- Game-over
+- Highlight active weed
+- Player can pull weeds
+- Player pull animation
+- Game-over state
+- Game restart
 - Game-over screen
 - Score-keeping
 - Score display
-- Game restart
-- Faster weed pulling
-- Faster movement
-- Highlight active weed
-- Player pull animation
+- Powerup: Faster weed pulling
+- Powerup: Faster movement
 
 Nice-to-have
 - Gradient static sky

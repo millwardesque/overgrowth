@@ -12,7 +12,7 @@ function _init()
 	-- Player
 	local player_height = 8
 	local player_start_x = 128 / 2 -- Middle of the screen
-	local player_start_y = g_game_config.ground_height - player_height - 1 -- 1px above the ground
+	local player_start_y = g_game_config.ground_height - player_height -- 1px above the ground
 	player = make_game_object("player", player_start_x, player_start_y)
 	player.speed = 3
 	attach_renderable(player, 1)
