@@ -72,6 +72,14 @@ function _draw()
 	cls()
 
 	g_renderer.render()
+
+	-- Draw score
+	color(7)
+	print(player.name..": "..player.score)
+
+	-- Draw debug log
+	g_log.render()
+	g_log.clear()
 end
 
 -- 
@@ -137,15 +145,14 @@ end
 function make_player(name, start_x, start_y, sprite, speed, strength)
 	local new_player = make_game_object(name, start_x, start_y)
 	new_player.is_pulling_weed = false
-	new_player.pulling_weed_duration = 0
+	new_player.pulling_weed_elapsed = 0
+	new_player.score = 0
 
 	-- Animations
 	local player_anims = {
 		idle = { 1 },
 		pull_weed = { 2, 1 }
 	}
-
-	-- @TODO Don't loop weeding animation.
 
 	attach_anim_spr_controller(new_player, 4, player_anims, "idle", 0)
 
@@ -166,15 +173,16 @@ function make_player(name, start_x, start_y, sprite, speed, strength)
 
 		set_anim_spr_animation(self.anim_controller, "pull_weed")
 		self.is_pulling_weed = true
-		self.pulling_weed_duration = 0
+		self.pulling_weed_elapsed = 0
 	end
 
 	-- Update player
 	new_player.update = function (self)
 		if self.is_pulling_weed then
-			self.pulling_weed_duration += 1
+			self.pulling_weed_elapsed += 1
 
-			if self.pulling_weed_duration > #self.anim_controller.animations['pull_weed'] * self.anim_controller.frames_per_cell then
+			local pulling_weed_duration = #self.anim_controller.animations['pull_weed'] * self.anim_controller.frames_per_cell
+			if self.pulling_weed_elapsed > pulling_weed_duration then
 				self.is_pulling_weed = false
 				set_anim_spr_animation(self.anim_controller, 'idle')
 			end
@@ -278,11 +286,15 @@ end
 
 function pull_weed(weed, amount, puller)
 	weed.weed.pull_offset += amount
+	
+	-- Score increases a bit for the pull.
+	puller.score += 1
 
 	if (weed.position.y + weed.weed.root_height - weed.weed.pull_offset < g_game_config.ground_height) then
 		g_weed_generator.kill_weed(weed)
 
-		-- @TODO Credit puller with score.
+		-- Score increases a lot for the extraction.
+		puller.score += 10
 	end
 end
 
@@ -446,10 +458,6 @@ g_renderer.render = function()
 	end
 
 	camera_draw_end(main_camera)
-
-	-- Draw debug log
-	g_log.render()
-	g_log.clear()
 end
 
 --

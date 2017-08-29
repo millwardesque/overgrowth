@@ -69,6 +69,14 @@ function _draw()
 	cls()
 
 	g_renderer.render()
+
+	-- Draw score
+	color(7)
+	print(player.name..": "..player.score)
+
+	-- Draw debug log
+	g_log.render()
+	g_log.clear()
 end
 
 -- 
@@ -135,6 +143,7 @@ function make_player(name, start_x, start_y, sprite, speed, strength)
 	local new_player = make_game_object(name, start_x, start_y)
 	new_player.is_pulling_weed = false
 	new_player.pulling_weed_elapsed = 0
+	new_player.score = 0
 
 	-- Animations
 	local player_anims = {
@@ -274,11 +283,15 @@ end
 
 function pull_weed(weed, amount, puller)
 	weed.weed.pull_offset += amount
+	
+	-- Score increases a bit for the pull.
+	puller.score += 1
 
 	if (weed.position.y + weed.weed.root_height - weed.weed.pull_offset < g_game_config.ground_height) then
 		g_weed_generator.kill_weed(weed)
 
-		-- @TODO Credit puller with score.
+		-- Score increases a lot for the extraction.
+		puller.score += 10
 	end
 end
 
@@ -442,10 +455,6 @@ g_renderer.render = function()
 	end
 
 	camera_draw_end(main_camera)
-
-	-- Draw debug log
-	g_log.render()
-	g_log.clear()
 end
 
 --

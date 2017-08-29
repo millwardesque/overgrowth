@@ -22,15 +22,15 @@ Essential
 . Weeds grow down
 . Weed generator
 . Highlight active weed
-- Player can pull weeds
+. Player can pull weeds
 	. Pulling shifts weed Y coordinate
 	. Once root tip is above ground, weed is out
-	- Player pull animation
+	. Player pull animation
 - Game-over state
 - Game restart
 - Game-over screen
-- Score-keeping
-- Score display
+. Score-keeping
+. Score display
 
 Important
 - Animated player
