@@ -26,25 +26,25 @@ Essential
 	. Pulling shifts weed Y coordinate
 	. Once root tip is above ground, weed is out
 	. Player pull animation
-	- Weed retracts over time
-- Game-over state
-- Game restart
-- Game-over screen
+	. Weed retracts over time
 . Score-keeping
 . Score display
+- Game-over detection
+- Game-over screen
+- Game restart
 
 Important
-- Animated player
 - Powerup: Faster weed pulling
 - Powerup: Faster movement
-- Interesting setting
-- Multiple types / grow patterns for weeds
+- Animated player walk
+- Weed bends if too tall
 - Multiple 'tops' of weeds (aesthetic only)
 - Sound FX for weed pull
 - Title screen
-- Weed bends if too tall
 
 Nice-to-have
+- Multiple types / grow patterns for weeds
+- Interesting setting
 - High score
 - Gradient static sky
 - More varied ground map
