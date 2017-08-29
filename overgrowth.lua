@@ -133,9 +133,23 @@ end
 -- Create a player
 function make_player(name, start_x, start_y, sprite, speed, strength)
 	local new_player = make_game_object(name, start_x, start_y)
+	new_player.is_pulling_weed = false
+	new_player.pulling_weed_elapsed = 0
+
+	-- Animations
+	local player_anims = {
+		idle = { 1 },
+		pull_weed = { 2, 1 }
+	}
+
+	attach_anim_spr_controller(new_player, 4, player_anims, "idle", 0)
+
+	-- Game stats
 	new_player.speed = speed
 	new_player.strength = strength
 	attach_renderable(new_player, sprite)
+
+	-- Pull a weed
 	new_player.pull_weed = function(self)
 		local center = self.position.x + (8 / 2)	-- Hardcoded to player width of 8px
 		local column = g_weed_generator.pixel_to_column(center)
@@ -144,6 +158,25 @@ function make_player(name, start_x, start_y, sprite, speed, strength)
 		if weed ~= nil then
 			pull_weed(weed, self.strength, self)
 		end
+
+		set_anim_spr_animation(self.anim_controller, "pull_weed")
+		self.is_pulling_weed = true
+		self.pulling_weed_elapsed = 0
+	end
+
+	-- Update player
+	new_player.update = function (self)
+		if self.is_pulling_weed then
+			self.pulling_weed_elapsed += 1
+
+			local pulling_weed_duration = #self.anim_controller.animations['pull_weed'] * self.anim_controller.frames_per_cell
+			if self.pulling_weed_elapsed > pulling_weed_duration then
+				self.is_pulling_weed = false
+				set_anim_spr_animation(self.anim_controller, 'idle')
+			end
+		end
+
+		update_anim_spr_controller(self.anim_controller, self)
 	end
 
 	add(scene, new_player)
@@ -442,6 +475,49 @@ end
 function camera_draw_end(cam)
 	camera()
 	clip()
+end
+
+
+--
+-- Animated sprite controller
+--
+function attach_anim_spr_controller(game_obj, frames_per_cell, animations, start_anim, start_frame_offset)
+	game_obj.anim_controller = {
+		current_animation = start_anim,
+		current_cell = 1,
+		frames_per_cell = frames_per_cell,
+		current_frame = 1 + start_frame_offset,
+		animations = animations,
+		flip_x = false,
+		flip_y = false,
+	}
+	return game_obj
+end
+
+function update_anim_spr_controller(controller, game_obj)
+	controller.current_frame += 1
+	if (controller.current_frame > controller.frames_per_cell) then
+		controller.current_frame = 1
+
+		if (controller.current_animation != nil and controller.current_cell != nil) then
+			controller.current_cell += 1
+			if (controller.current_cell > #controller.animations[controller.current_animation]) then
+				controller.current_cell = 1
+			end
+		end
+	end
+
+	if (game_obj.renderable and controller.current_animation != nil and controller.current_cell != nil) then
+		game_obj.renderable.sprite = controller.animations[controller.current_animation][controller.current_cell]
+	elseif (game_obj.renderable) then
+		game_obj.renderable.sprite = nil
+	end
+end
+
+function set_anim_spr_animation(controller, animation)
+	controller.current_frame = 0
+	controller.current_cell = 1
+	controller.current_animation = animation
 end
 
 --

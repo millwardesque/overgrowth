@@ -23,8 +23,8 @@ Essential
 . Weed generator
 . Highlight active weed
 - Player can pull weeds
-	- Pulling shifts weed Y coordinate?
-	- Once root tip is above ground, weed is out
+	. Pulling shifts weed Y coordinate
+	. Once root tip is above ground, weed is out
 	- Player pull animation
 - Game-over state
 - Game restart
