@@ -225,7 +225,7 @@ end
 --
 -- Weed
 --
-function make_weed(name, sprite, stem_max_height, stem_growth_rate, stem_colour, root_max_height, root_growth_rate, root_colour)
+function make_weed(name, sprite, stem_max_height, stem_growth_rate, stem_colour, root_max_height, root_growth_rate, root_colour, reroot_speed)
 	local weed = make_game_object(name, g_weed_generator.column_to_pixel(column), g_game_config.ground_height)
 
 	weed.weed = {
@@ -237,6 +237,7 @@ function make_weed(name, sprite, stem_max_height, stem_growth_rate, stem_colour,
 		root_max_height = root_max_height,
 		root_growth_rate = root_growth_rate,
 		root_colour = root_colour,
+		reroot_speed = reroot_speed,
 		pull_offset = 0,
 	}
 	attach_renderable(weed, sprite)
@@ -245,19 +246,26 @@ function make_weed(name, sprite, stem_max_height, stem_growth_rate, stem_colour,
 	-- Update the weed
 	--
 	weed.update = function (self)
-		if self.weed.stem_height < self.weed.stem_max_height then
-			self.weed.stem_height += self.weed.stem_growth_rate
-
-			if self.weed.stem_height > self.weed.stem_max_height then
-				self.weed.stem_height = self.weed.stem_max_height				
+		if self.weed.pull_offset > 0 then
+			self.weed.pull_offset -= self.weed.reroot_speed
+			if self.weed.pull_offset < 0 then
+				self.weed.pull_offset = 0
 			end
-		end
+		else
+			if self.weed.stem_height < self.weed.stem_max_height then
+				self.weed.stem_height += self.weed.stem_growth_rate
 
-		if self.weed.root_height < self.weed.root_max_height then
-			self.weed.root_height += self.weed.root_growth_rate
-			
-			if self.weed.root_height > self.weed.root_max_height then
-				self.weed.root_height = self.weed.root_max_height				
+				if self.weed.stem_height > self.weed.stem_max_height then
+					self.weed.stem_height = self.weed.stem_max_height				
+				end
+			end
+
+			if self.weed.root_height < self.weed.root_max_height then
+				self.weed.root_height += self.weed.root_growth_rate
+				
+				if self.weed.root_height > self.weed.root_max_height then
+					self.weed.root_height = self.weed.root_max_height				
+				end
 			end
 		end
 	end
@@ -390,12 +398,14 @@ g_weed_generator.generate_weed = function ()
 	local stem_growth_rate = 0.05 + rnd(20) / 100
 	local stem_colour = 3
 	
-	local root_max_height = flr(rnd(32)) + 20
-	local root_growth_rate = 0.05 + rnd(20) / 100
+	local root_max_height = flr(rnd(16)) + 20
+	local root_growth_rate = 0.05 + rnd(10) / 100
 	local root_colour = 5
 
+	local reroot_speed = 0.01 + flr(rnd(10)) / 100
+
 	-- Construct the weed
-	local weed = make_weed("weed-"..column, sprite, stem_max_height, stem_growth_rate, stem_colour, root_max_height, root_growth_rate, root_colour)
+	local weed = make_weed("weed-"..column, sprite, stem_max_height, stem_growth_rate, stem_colour, root_max_height, root_growth_rate, root_colour, reroot_speed)
 	self.weeds[column] = weed
 	add(scene, weed)
 end
