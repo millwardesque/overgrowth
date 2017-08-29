@@ -208,7 +208,7 @@ function make_weed_highlighter(owner, sprite)
 
 		local weed = g_weed_generator.weeds[column]
 		if weed ~= nil then
-			self.position.y = weed.position.y - weed.weed.stem_height - 8 - (8 / 2) - 2	-- Draw highlighter above the weed
+			self.position.y = weed.position.y - weed.weed.pull_offset - weed.weed.stem_height - 8 - (8 / 2) - 2	-- Draw highlighter above the weed
 		else
 			self.position.y = -8	-- Offscreen
 		end
