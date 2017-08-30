@@ -32,15 +32,19 @@ Essential
 - Game-over detection
 - Game-over screen
 - Game restart
+- Player drawn in front of weeds
+- Balance
 
 Important
 - Powerup: Faster weed pulling
 - Powerup: Faster movement
 - Animated player walk
 - Weed bends if too tall
+- Weed top becomes bigger as it gets taller
 - Multiple 'tops' of weeds (aesthetic only)
 - Sound FX for weed pull
 - Title screen
+- Disabled state for highlighter
 
 Nice-to-have
 - Multiple types / grow patterns for weeds

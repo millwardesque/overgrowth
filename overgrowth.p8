@@ -21,7 +21,7 @@ function _init()
 	make_weed_highlighter(player, 48)
 
 	-- Weeds
-	g_weed_generator.init(16, 60) 
+	g_weed_generator.init(16, 32, 60) 
 	g_weed_generator.generate_weed()
 end
 
@@ -65,7 +65,12 @@ function _update()
 		end
 	end
 
-	g_log.log("CPU: "..stat(1))
+	-- Check for game-over state
+	if g_weed_generator.are_all_weeds_grown() then
+		g_log.log("GAME OVER")
+	end
+
+	-- @DEBUG g_log.log("CPU: "..stat(1))
 end
 
 function _draw()
@@ -167,7 +172,7 @@ function make_player(name, start_x, start_y, sprite, speed, strength)
 		local column = g_weed_generator.pixel_to_column(center)
 		local weed = g_weed_generator.get_weed(column)
 
-		if weed ~= nil then
+		if weed ~= nil and not is_weed_fully_grown(weed) then
 			pull_weed(weed, self.strength, self)
 		end
 
@@ -210,7 +215,7 @@ function make_weed_highlighter(owner, sprite)
 		self.position.x = g_weed_generator.column_to_pixel(column) - my_center
 
 		local weed = g_weed_generator.weeds[column]
-		if weed ~= nil then
+		if weed ~= nil and not is_weed_fully_grown(weed) then
 			self.position.y = weed.position.y - weed.weed.pull_offset - weed.weed.stem_height - 8 - (8 / 2) - 2	-- Draw highlighter above the weed
 		else
 			self.position.y = -8	-- Offscreen
@@ -292,7 +297,25 @@ function make_weed(name, sprite, stem_max_height, stem_growth_rate, stem_colour,
 	return weed
 end
 
+--
+-- Returns true if a weed is at full height
+--
+function is_weed_fully_grown(weed)
+	if weed == nil or weed.weed == nil then
+		return false
+	else
+		return weed.weed.root_height == weed.weed.root_height and weed.weed.stem_height == weed.weed.stem_max_height
+	end
+end
+
+--
+-- Attempts to pull a weed
+--
 function pull_weed(weed, amount, puller)
+	if weed == nil or is_weed_fully_grown(weed) then
+		return
+	end
+
 	weed.weed.pull_offset += amount
 	
 	-- Score increases a bit for the pull.
@@ -314,15 +337,17 @@ g_weed_generator = {
 	weeds = {},
 	time_between_weeds = 1,
 	time_until_weed = 0,
+	max_weed_height = 1,
 }
 
 --
 -- Initialize the weed generator
 --
-g_weed_generator.init = function(weed_width, time_between_weeds)
+g_weed_generator.init = function(weed_width, max_weed_height, time_between_weeds)
 	local self = g_weed_generator
 
 	self.weed_width = weed_width
+	self.max_weed_height = max_weed_height
 	self.time_between_weeds = time_between_weeds
 	self.time_until_weed = time_between_weeds
 
@@ -344,12 +369,16 @@ g_weed_generator.update = function()
 	end
 
 	-- @DEBUG summarize
-	local message = 'c: '
+	local message = 'weeds: '
 	for i = 1, self.columns() do
 		if self.weeds[i] == nil then
 			message = message..' . '
 		else
-			message = message..' x '
+			if is_weed_fully_grown(self.weeds[i]) then
+				message = message..' # '
+			else
+				message = message..' x '
+			end
 		end
 	end
 	g_log.log(message)
@@ -394,12 +423,12 @@ g_weed_generator.generate_weed = function ()
 	-- Generate random params
 	local sprite = 32
 	
-	local stem_max_height = flr(rnd(32)) + 20
-	local stem_growth_rate = 0.05 + rnd(20) / 100
+	local stem_max_height =  self.max_weed_height
+	local stem_growth_rate = 0.1 + rnd(20) / 100
 	local stem_colour = 3
 	
-	local root_max_height = flr(rnd(16)) + 20
-	local root_growth_rate = 0.05 + rnd(10) / 100
+	local root_max_height = self.max_weed_height / 2
+	local root_growth_rate = stem_growth_rate / 2
 	local root_colour = 5
 
 	local reroot_speed = 0.01 + flr(rnd(10)) / 100
@@ -423,6 +452,19 @@ g_weed_generator.kill_weed = function (weed)
 	end	
 
 	del(scene, weed)
+end
+
+g_weed_generator.are_all_weeds_grown = function ()
+	local self = g_weed_generator
+	local are_all_grown = true
+
+	for col = 1, self.columns() do
+		if not is_weed_fully_grown(self.weeds[col]) then
+			return false
+		end
+	end
+
+	return true
 end
 
 --
