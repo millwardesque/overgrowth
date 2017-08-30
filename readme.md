@@ -29,8 +29,8 @@ Essential
 	. Weed retracts over time
 . Score-keeping
 . Score display
-- Game-over detection
-- Game-over screen
+. Game-over detection
+- Game-over state
 - Game restart
 - Player drawn in front of weeds
 - Balance

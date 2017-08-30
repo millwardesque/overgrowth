@@ -4,85 +4,126 @@ main_camera = {}
 g_game_config = {
 	ground_height = 64,	-- Height of the first ground pixel
 }
+state = nil
 
 function _init()
-	main_camera = make_camera(0, 0, 128, 128, 0, 0)
-
-	-- Player
-	local player_height = 8
-	local player_start_x = 128 / 2 -- Middle of the screen
-	local player_start_y = g_game_config.ground_height - player_height -- 1px above the ground
-	player = make_player("player", player_start_x, player_start_y, 1, 2, 2)
-
-	-- Weed highlighter
-	make_weed_highlighter(player, 48)
-
-	-- Weeds
-	g_weed_generator.init(16, 32, 60) 
-	g_weed_generator.generate_weed()
+	set_game_state(ingame_state)
 end
 
 function _update()
-	-- Process input
-	player_movement = make_vec2(0, 0)
-	if btn(0) then
-		player_movement.x -= player.speed
+	if state ~= nil then
+		state.update(state)
 	end
-
-	if btn(1) then
-		player_movement.x += player.speed
-	end
-
-	if btnp(4) then
-		player.pull_weed(player)
-	end
-
-	if btn(5) then
-		-- @TODO Activate Powerup
-	end
-
-	-- Process player movement changes
-	player.position += player_movement
-
-	-- Keep the player inside the screen bounds
-	local player_width = 8
-	if player.position.x < 0 then
-		player.position.x = 0
-	elseif player.position.x + player_width > 127 then
-		player.position.x = 127 - player_width
-	end
-
-	-- Update weed generator
-	g_weed_generator.update()
-
-	-- Update game objects
-	for game_obj in all(scene) do
-		if (game_obj.update) then
-			game_obj.update(game_obj)
-		end
-	end
-
-	-- Check for game-over state
-	if g_weed_generator.are_all_weeds_grown() then
-		g_log.log("GAME OVER")
-	end
-
+	
 	-- @DEBUG g_log.log("CPU: "..stat(1))
 end
 
 function _draw()
 	cls()
 
-	g_renderer.render()
-
-	-- Draw score
-	color(7)
-	print(player.name..": "..player.score)
+	if state ~= nil then
+		state.draw(state)
+	end
 
 	-- Draw debug log
 	g_log.render()
 	g_log.clear()
 end
+
+--
+-- Sets the active game state
+--
+function set_game_state(game_state)
+	if state ~= nil and state.exit then
+		state.exit(self)
+	end
+
+	state = game_state
+	state.enter(self)
+end
+
+--
+-- Encapsulates the ingame state
+--
+ingame_state = {
+	enter = function(self)
+		scene = {}
+
+		-- Make the camera
+		main_camera = make_camera(0, 0, 128, 128, 0, 0)
+
+		-- Player
+		local player_height = 8
+		local player_start_x = 128 / 2 -- Middle of the screen
+		local player_start_y = g_game_config.ground_height - player_height -- 1px above the ground
+		player = make_player("player", player_start_x, player_start_y, 1, 2, 2)
+
+		-- Weed highlighter
+		make_weed_highlighter(player, 48)
+
+		-- Weeds
+		g_weed_generator.init(16, 32, 60) 
+		g_weed_generator.generate_weed()
+	end,
+
+	update = function(self)
+		-- Process input
+		player_movement = make_vec2(0, 0)
+		if btn(0) then
+			player_movement.x -= player.speed
+		end
+
+		if btn(1) then
+			player_movement.x += player.speed
+		end
+
+		if btnp(4) then
+			player.pull_weed(player)
+		end
+
+		if btn(5) then
+			-- @TODO Activate Powerup
+		end
+
+		-- Process player movement changes
+		player.position += player_movement
+
+		-- Keep the player inside the screen bounds
+		local player_width = 8
+		if player.position.x < 0 then
+			player.position.x = 0
+		elseif player.position.x + player_width > 127 then
+			player.position.x = 127 - player_width
+		end
+
+		-- Update weed generator
+		g_weed_generator.update()
+
+		-- Update game objects
+		for game_obj in all(scene) do
+			if (game_obj.update) then
+				game_obj.update(game_obj)
+			end
+		end
+
+		-- Check for game-over state
+		if g_weed_generator.are_all_weeds_grown() then
+			g_log.log("GAME OVER")
+		end
+	end,
+
+	draw = function(self)
+		g_renderer.render()
+
+		-- Draw score
+		color(7)
+		print(player.name..": "..player.score)
+	end,
+
+	exit = function(self)
+
+	end
+}
 
 -- 
 -- Game Object
@@ -342,6 +383,7 @@ g_weed_generator = {
 --
 g_weed_generator.init = function(weed_width, max_weed_height, time_between_weeds)
 	local self = g_weed_generator
+	self.weeds = {}
 
 	self.weed_width = weed_width
 	self.max_weed_height = max_weed_height
