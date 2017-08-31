@@ -120,7 +120,7 @@ ingame_state = {
 
 		-- Draw score
 		color(7)
-		print(player.name..": "..player.score)
+		print(player.name..": "..player.score.." ("..player.weeds_pulled.." pulled)")
 	end,
 
 	exit = function(self)
@@ -247,6 +247,7 @@ function make_player(name, start_x, start_y, sprite, speed, strength)
 	new_player.is_pulling_weed = false
 	new_player.pulling_weed_elapsed = 0
 	new_player.score = 0
+	new_player.weeds_pulled = 0
 
 	-- Animations
 	local player_anims = {
@@ -422,6 +423,7 @@ function pull_weed(weed, amount, puller)
 
 		-- Score increases a lot for the extraction.
 		puller.score += 10
+		puller.weeds_pulled += 1
 	end
 end
 
@@ -434,6 +436,9 @@ g_weed_generator = {
 	time_between_weeds = 1,
 	time_until_weed = 0,
 	max_weed_height = 1,
+	generated_weeds = 0,
+	base_growth_rate = 0.1,
+	weeds_per_batch = 1,
 }
 
 --
@@ -442,6 +447,9 @@ g_weed_generator = {
 g_weed_generator.init = function(weed_width, max_weed_height, time_between_weeds)
 	local self = g_weed_generator
 	self.weeds = {}
+	self.generated_weeds = 0
+	self.base_growth_rate = 0.1
+	self.weeds_per_batch = 1
 
 	self.weed_width = weed_width
 	self.max_weed_height = max_weed_height
@@ -461,8 +469,21 @@ g_weed_generator.update = function()
 	self.time_until_weed -= 1
 
 	if self.time_until_weed == 0 then
-		self.generate_weed()
+		for i = 1, self.weeds_per_batch do
+			self.generate_weed()
+		end
 		self.time_until_weed = self.time_between_weeds
+
+		-- Increase the growth speed if we've generated enough weeds
+		if self.generated_weeds % self.columns() == 0 then
+			self.base_growth_rate += 0.1
+		end
+
+		-- Increase the number of weeds generated at once if we've generated enough weeds
+		if self.generated_weeds % (self.columns() * 2) == 0 then
+			self.weeds_per_batch += 1
+			self.base_growth_rate -= 0.1
+		end
 	end
 
 	-- @DEBUG summarize
@@ -478,6 +499,9 @@ g_weed_generator.update = function()
 			end
 		end
 	end
+	g_log.log(message)
+
+	message = "baserate: "..self.base_growth_rate.." # batch: "..self.weeds_per_batch
 	g_log.log(message)
 end
 
@@ -534,6 +558,8 @@ g_weed_generator.generate_weed = function ()
 	local weed = make_weed("weed-"..column, sprite, stem_max_height, stem_growth_rate, stem_colour, root_max_height, root_growth_rate, root_colour, reroot_speed)
 	self.weeds[column] = weed
 	add(scene, weed)
+
+	self.generated_weeds += 1
 end
 
 -- 

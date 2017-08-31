@@ -39,19 +39,19 @@ Essential
 	- Stay alive forever by sitting in one spot
 
 Important
-- Powerup: Faster weed pulling
-- Powerup: Faster movement
 - Animated player walk
-- Weed bends if too tall
 - Weed top becomes bigger as it gets taller
 - Multiple 'tops' of weeds (aesthetic only)
 - Sound FX for weed pull
 - Title screen
-- Disabled state for highlighter
 - Track weeds pulled in addition to score
 
 Nice-to-have
 - Multiple types / grow patterns for weeds
+- Powerup: Faster weed pulling
+- Powerup: Faster movement
+- Weed bends if too tall
+- Disabled state for highlighter
 - Interesting setting
 - High score
 - Gradient static sky
