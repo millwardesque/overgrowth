@@ -39,12 +39,13 @@ Essential
 	- Stay alive forever by sitting in one spot
 
 Important
+. Title screen
+. Track weeds pulled in addition to score
+. Disable debug text
 - Animated player walk
 - Weed top becomes bigger as it gets taller
 - Multiple 'tops' of weeds (aesthetic only)
 - Sound FX for weed pull
-- Title screen
-- Track weeds pulled in addition to score
 
 Nice-to-have
 - Multiple types / grow patterns for weeds
@@ -52,7 +53,7 @@ Nice-to-have
 - Powerup: Faster movement
 - Weed bends if too tall
 - Disabled state for highlighter
-- Interesting setting
+- Interesting setting 
 - High score
 - Gradient static sky
 - More varied ground map

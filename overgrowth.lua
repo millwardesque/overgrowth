@@ -7,7 +7,7 @@ g_game_config = {
 state = nil
 
 function _init()
-	set_game_state(ingame_state)
+	set_game_state(title_state)
 end
 
 function _update()
@@ -41,6 +41,46 @@ function set_game_state(game_state)
 	state = game_state
 	state.enter(self)
 end
+
+-- 
+-- Encapsulates the title screen
+--
+title_state = {
+	enter = function(self)
+	end,
+
+	update = function(self)
+		if btnp(0) or btnp(1) or btnp(2) or btnp(3) or btnp(4) or btnp(5) then
+			set_game_state(ingame_state)
+		end
+	end,
+
+	draw = function(self)
+		-- Draw main title window
+		camera()
+		clip()
+
+		map(0, 0, 0, 0, 128, 128) -- draw the whole map and let the clipping region remove unnecessary bits
+
+		rectfill(12, 30, 116, 76, 6)
+		rectfill(14, 32, 114, 74, 3)
+		color(7)
+
+		local line_height = 10
+		local print_y = 40
+		print("weed.", 56, print_y)
+		print_y += line_height
+
+		print("by pixel.pistol.games", 22, print_y)
+		print_y += line_height
+
+		print("press any key to begin", 20, print_y)
+	end,
+
+	exit = function(self)
+
+	end
+}
 
 --
 -- Encapsulates the ingame state
@@ -117,7 +157,7 @@ ingame_state = {
 
 		-- Draw score
 		color(7)
-		print(player.name..": "..player.score.." ("..player.weeds_pulled.." pulled)")
+		print("score: "..player.score.." ("..player.weeds_pulled.." weeds pulled)")
 	end,
 
 	exit = function(self)
@@ -133,7 +173,8 @@ game_over_state = {
 
 		if not player then
 			player = {
-				score = 0
+				score = 0,
+				weeds_pulled = 0,
 			}
 		end
 	end,
@@ -158,8 +199,8 @@ game_over_state = {
 		camera()
 		clip()
 
-		rectfill(12, 30, 116, 76, 6)
-		rectfill(14, 32, 114, 74, 3)
+		rectfill(12, 30, 116, 86, 6)
+		rectfill(14, 32, 114, 84, 3)
 		color(7)
 
 		local line_height = 10
@@ -167,10 +208,13 @@ game_over_state = {
 		print("game over!", 46, print_y)
 		print_y += line_height
 
-		print("final score: "..player.score, 40, print_y)
+		print("final score: "..player.score, 34, print_y)
 		print_y += line_height
 
-		print("press any key to restart", 18, print_y)
+		print("weeds pulled: "..player.weeds_pulled, 34, print_y)
+		print_y += line_height
+
+		print("press any key to restart", 16, print_y)
 	end,
 
 	exit = function(self)
@@ -484,22 +528,25 @@ g_weed_generator.update = function()
 	end
 
 	-- @DEBUG summarize
-	local message = 'weeds: '
-	for i = 1, self.columns() do
-		if self.weeds[i] == nil then
-			message = message..' . '
-		else
-			if is_weed_fully_grown(self.weeds[i]) then
-				message = message..' # '
+	local show_debug = false
+	if show_debug then
+		local message = 'weeds: '
+		for i = 1, self.columns() do
+			if self.weeds[i] == nil then
+				message = message..' . '
 			else
-				message = message..' x '
+				if is_weed_fully_grown(self.weeds[i]) then
+					message = message..' # '
+				else
+					message = message..' x '
+				end
 			end
 		end
-	end
-	g_log.log(message)
+		g_log.log(message)
 
-	message = "baserate: "..self.base_growth_rate.." # batch: "..self.weeds_per_batch
-	g_log.log(message)
+		message = "baserate: "..self.base_growth_rate.." # batch: "..self.weeds_per_batch
+		g_log.log(message)
+	end
 end
 
 --
