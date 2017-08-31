@@ -30,13 +30,13 @@ Essential
 . Score-keeping
 . Score display
 . Game-over detection
-- Game-over state
-- Game restart
-- Player drawn in front of weeds
+. Game-over state
+. Game restart
+. Player drawn in front of weeds
 - Difficulty over time
 - Balance
 	- Growth rates
-- Track weeds pulled in addition to score
+	- Stay alive forever by sitting in one spot
 
 Important
 - Powerup: Faster weed pulling
@@ -48,6 +48,7 @@ Important
 - Sound FX for weed pull
 - Title screen
 - Disabled state for highlighter
+- Track weeds pulled in addition to score
 
 Nice-to-have
 - Multiple types / grow patterns for weeds

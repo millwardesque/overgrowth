@@ -10,7 +10,7 @@ g_game_config = {
 state = nil
 
 function _init()
-	set_game_state(game_over_state)
+	set_game_state(ingame_state)
 end
 
 function _update()
@@ -203,6 +203,7 @@ function attach_renderable(game_obj, sprite)
 		flip_y = false,
 		sprite_width = 1,
 		sprite_height = 1,
+		draw_order = 0,
 		palette = nil
 	}
 
@@ -259,6 +260,7 @@ function make_player(name, start_x, start_y, sprite, speed, strength)
 	new_player.speed = speed
 	new_player.strength = strength
 	attach_renderable(new_player, sprite)
+	new_player.renderable.draw_order = 1	-- Draw player after other in-game objects so he appears in front of weeds
 
 	-- Pull a weed
 	new_player.pull_weed = function(self)
@@ -593,7 +595,8 @@ g_renderer.render = function()
 		end
 	end
 
-	-- @TODO Depth-sort?
+	-- Sort by draw-order
+	quicksort_draw_order(renderables)
 
 	-- Draw the scene
 	camera_draw_start(main_camera)
@@ -605,6 +608,49 @@ g_renderer.render = function()
 	end
 
 	camera_draw_end(main_camera)
+end
+
+
+--
+-- Sort a renderable array by draw-order
+-- 
+function quicksort_draw_order(list)
+	quicksort_draw_order_helper(list, 1, #list)
+end
+
+--
+-- Helper function for sorting renderables by draw-order
+function quicksort_draw_order_helper(list, low, high)
+	if (low < high) then
+		local p = quicksort_draw_order_partition(list, low, high)
+		quicksort_draw_order_helper(list, low, p - 1)
+		quicksort_draw_order_helper(list, p + 1, high)
+	end
+end
+
+--
+-- Partition a renderable list by draw_order
+--
+function quicksort_draw_order_partition(list, low, high)
+	local pivot = list[high]
+	local i = low - 1
+	local temp
+	for j = low, high - 1 do
+		if (list[j].renderable.draw_order < pivot.renderable.draw_order) then
+			i += 1
+			temp = list[j]
+			list[j] = list[i]
+			list[i] = temp
+ 		end
+	end
+
+	if (list[high].renderable.draw_order < list[i + 1].renderable.draw_order) then
+		temp = list[high]
+		list[high] = list[i + 1]
+		list[i + 1] = temp
+	end
+
+	return i + 1
 end
 
 --
