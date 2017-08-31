@@ -1,6 +1,6 @@
-scene = {}
-player = {}
-main_camera = {}
+scene = nil
+player = nil
+main_camera = nil
 g_game_config = {
 	ground_height = 64,	-- Height of the first ground pixel
 }
@@ -52,6 +52,10 @@ ingame_state = {
 		-- Make the camera
 		main_camera = make_camera(0, 0, 128, 128, 0, 0)
 
+		-- Weeds
+		g_weed_generator.init(16, 32, 60) 
+		g_weed_generator.generate_weed()
+
 		-- Player
 		local player_height = 8
 		local player_start_x = 128 / 2 -- Middle of the screen
@@ -60,10 +64,6 @@ ingame_state = {
 
 		-- Weed highlighter
 		make_weed_highlighter(player, 48)
-
-		-- Weeds
-		g_weed_generator.init(16, 32, 60) 
-		g_weed_generator.generate_weed()
 	end,
 
 	update = function(self)
@@ -108,7 +108,7 @@ ingame_state = {
 
 		-- Check for game-over state
 		if g_weed_generator.are_all_weeds_grown() then
-			g_log.log("GAME OVER")
+			set_game_state(game_over_state)
 		end
 	end,
 
@@ -118,6 +118,59 @@ ingame_state = {
 		-- Draw score
 		color(7)
 		print(player.name..": "..player.score)
+	end,
+
+	exit = function(self)
+
+	end
+}
+
+game_over_state = {
+	enter = function(self)
+		if not main_camera then
+			main_camera = make_camera(0, 0, 128, 128, 0, 0)
+		end
+
+		if not player then
+			player = {
+				score = 0
+			}
+		end
+	end,
+
+	update = function(self)
+		if btnp(0) or btnp(1) or btnp(2) or btnp(3) or btnp(4) or btnp(5) then
+			set_game_state(ingame_state)
+		end
+
+		-- Update game objects (mostly to keep animations running)
+		for game_obj in all(scene) do
+			if (game_obj.update) then
+				game_obj.update(game_obj)
+			end
+		end
+	end,
+
+	draw = function(self)
+		g_renderer.render()
+
+		-- Draw game-over window
+		camera()
+		clip()
+
+		rectfill(12, 30, 116, 76, 6)
+		rectfill(14, 32, 114, 74, 3)
+		color(7)
+
+		local line_height = 10
+		local print_y = 40
+		print("game over!", 46, print_y)
+		print_y += line_height
+
+		print("final score: "..player.score, 40, print_y)
+		print_y += line_height
+
+		print("press any key to restart", 18, print_y)
 	end,
 
 	exit = function(self)

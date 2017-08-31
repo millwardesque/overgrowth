@@ -33,7 +33,10 @@ Essential
 - Game-over state
 - Game restart
 - Player drawn in front of weeds
+- Difficulty over time
 - Balance
+	- Growth rates
+- Track weeds pulled in addition to score
 
 Important
 - Powerup: Faster weed pulling
