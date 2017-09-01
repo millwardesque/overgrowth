@@ -34,6 +34,9 @@ Essential
 . Game restart
 . Player drawn in front of weeds
 - Difficulty over time
+	- If not enough open columns to increase weeds / batch, increase growth rate
+	- Score multiplier for chaining different columns?
+	- Score multiplier for stalling plants?
 - Balance
 	- Growth rates
 	- Stay alive forever by sitting in one spot

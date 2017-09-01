@@ -10,7 +10,7 @@ g_game_config = {
 state = nil
 
 function _init()
-	set_game_state(game_over_state)
+	set_game_state(title_state)
 end
 
 function _update()
@@ -519,19 +519,22 @@ g_weed_generator.update = function()
 		self.time_until_weed = self.time_between_weeds
 
 		-- Increase the growth speed if we've generated enough weeds
-		if self.generated_weeds % self.columns() == 0 then
-			self.base_growth_rate += 0.1
-		end
-
 		-- Increase the number of weeds generated at once if we've generated enough weeds
 		if self.generated_weeds % (self.columns() * 2) == 0 then
-			self.weeds_per_batch += 1
-			self.base_growth_rate -= 0.1
+			local column_overflow = self.weeds_per_batch - #self.get_available_columns()
+			if column_overflow < 0 then
+				self.weeds_per_batch += 1
+				self.base_growth_rate /= 2
+			else
+				self.base_growth_rate += 0.05
+			end
+		elseif self.generated_weeds % self.columns() == 0 then
+			self.base_growth_rate += 0.05
 		end
 	end
 
 	-- @DEBUG summarize
-	local show_debug = false
+	local show_debug = true
 	if show_debug then
 		local message = 'weeds: '
 		for i = 1, self.columns() do
@@ -559,6 +562,18 @@ g_weed_generator.columns = function ()
 	return flr(128 / g_weed_generator.weed_width)
 end
 
+g_weed_generator.get_available_columns = function ()
+	local self = g_weed_generator
+	available_cols = {}
+	for col = 1, self.columns() do
+		if self.weeds[col] == nil then
+			add(available_cols, col)
+		end
+	end
+
+	return available_cols
+end
+
 --
 -- Gets the weed at a column if there is one. If not, returns nil.
 g_weed_generator.get_weed = function (column) 
@@ -572,12 +587,7 @@ g_weed_generator.generate_weed = function ()
 	local self = g_weed_generator
 
 	-- Find available columns
-	available_cols = {}
-	for col = 1, self.columns() do
-		if self.weeds[col] == nil then
-			add(available_cols, col)
-		end
-	end
+	available_cols = self.get_available_columns()
 
 	-- Don't generate a weed if there's no space left
 	if #available_cols == 0 then
@@ -592,7 +602,7 @@ g_weed_generator.generate_weed = function ()
 	local sprite = 32
 	
 	local stem_max_height =  self.max_weed_height
-	local stem_growth_rate = 0.1 + rnd(20) / 100
+	local stem_growth_rate = self.base_growth_rate + rnd(20) / 100
 	local stem_colour = 3
 	
 	local root_max_height = self.max_weed_height / 2
