@@ -51,6 +51,8 @@ Important
 - Sound FX for weed pull
 
 Nice-to-have
+. Gradient static sky
+. More varied ground map
 - Multiple types / grow patterns for weeds
 - Powerup: Faster weed pulling
 - Powerup: Faster movement
@@ -58,14 +60,11 @@ Nice-to-have
 - Disabled state for highlighter
 - Interesting setting 
 - High score
-- Gradient static sky
-- More varied ground map
 - Sunrise / sunset fades
 - Camera shake when the weed is removed
 - Animated roots
-- Different colours for weeds
-- Flame thrower
-- Lawn mower
+- Powerup: Flame thrower
+- Powerup: Lawn mower
 - Animated background elements (clouds, etc.)
 - Weed root branching underground
 - Background music
