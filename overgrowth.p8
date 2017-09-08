@@ -5,7 +5,7 @@ scene = nil
 player = nil
 main_camera = nil
 g_game_config = {
-	ground_height = 64,	-- Height of the first ground pixel
+	ground_height = 64,	-- height of the first ground pixel
 }
 state = nil
 
@@ -18,7 +18,7 @@ function _update()
 		state.update(state)
 	end
 	
-	-- @DEBUG g_log.log("CPU: "..stat(1))
+	-- @debug g_log.log("cpu: "..stat(1))
 end
 
 function _draw()
@@ -28,13 +28,13 @@ function _draw()
 		state.draw(state)
 	end
 
-	-- Draw debug log
+	-- draw debug log
 	g_log.render()
 	g_log.clear()
 end
 
 --
--- Sets the active game state
+-- sets the active game state
 --
 function set_game_state(game_state)
 	if state ~= nil and state.exit then
@@ -46,7 +46,7 @@ function set_game_state(game_state)
 end
 
 -- 
--- Encapsulates the title screen
+-- encapsulates the title screen
 --
 title_state = {
 	enter = function(self)
@@ -59,7 +59,7 @@ title_state = {
 	end,
 
 	draw = function(self)
-		-- Draw main title window
+		-- draw main title window
 		camera()
 		clip()
 
@@ -86,31 +86,31 @@ title_state = {
 }
 
 --
--- Encapsulates the ingame state
+-- encapsulates the ingame state
 --
 ingame_state = {
 	enter = function(self)
 		scene = {}
 
-		-- Make the camera
+		-- make the camera
 		main_camera = make_camera(0, 0, 128, 128, 0, 0)
 
-		-- Weeds
+		-- weeds
 		g_weed_generator.init(16, 32, 60) 
 		g_weed_generator.generate_weed()
 
-		-- Player
+		-- player
 		local player_height = 8
-		local player_start_x = 128 / 2 -- Middle of the screen
+		local player_start_x = 128 / 2 -- middle of the screen
 		local player_start_y = g_game_config.ground_height - player_height -- 1px above the ground
 		player = make_player("player", player_start_x, player_start_y, 1, 2, 2)
 
-		-- Weed highlighter
+		-- weed highlighter
 		make_weed_highlighter(player, 48)
 	end,
 
 	update = function(self)
-		-- Process input
+		-- process input
 		player_movement = make_vec2(0, 0)
 		if btn(0) then
 			player_movement.x -= player.speed
@@ -125,13 +125,13 @@ ingame_state = {
 		end
 
 		if btn(5) then
-			-- @TODO Activate Powerup
+			-- @todo activate powerup
 		end
 
-		-- Process player movement changes
+		-- process player movement changes
 		player.position += player_movement
 
-		-- Keep the player inside the screen bounds
+		-- keep the player inside the screen bounds
 		local player_width = 8
 		if player.position.x < 0 then
 			player.position.x = 0
@@ -139,17 +139,17 @@ ingame_state = {
 			player.position.x = 127 - player_width
 		end
 
-		-- Update weed generator
+		-- update weed generator
 		g_weed_generator.update()
 
-		-- Update game objects
+		-- update game objects
 		for game_obj in all(scene) do
 			if (game_obj.update) then
 				game_obj.update(game_obj)
 			end
 		end
 
-		-- Check for game-over state
+		-- check for game-over state
 		if g_weed_generator.are_all_weeds_grown() then
 			set_game_state(game_over_state)
 		end
@@ -158,7 +158,7 @@ ingame_state = {
 	draw = function(self)
 		g_renderer.render()
 
-		-- Draw score
+		-- draw score
 		color(7)
 		print("score: "..player.score.." ("..player.weeds_pulled.." weeds pulled)")
 	end,
@@ -187,7 +187,7 @@ game_over_state = {
 			set_game_state(ingame_state)
 		end
 
-		-- Update game objects (mostly to keep animations running)
+		-- update game objects (mostly to keep animations running)
 		for game_obj in all(scene) do
 			if (game_obj.update) then
 				game_obj.update(game_obj)
@@ -198,7 +198,7 @@ game_over_state = {
 	draw = function(self)
 		g_renderer.render()
 
-		-- Draw game-over window
+		-- draw game-over window
 		camera()
 		clip()
 
@@ -226,7 +226,7 @@ game_over_state = {
 }
 
 -- 
--- Game Object
+-- game object
 --
 function make_game_object(name, pos_x, pos_y)
 	local game_obj = {
@@ -237,7 +237,7 @@ function make_game_object(name, pos_x, pos_y)
 end
 
 --
--- Renderable maker.
+-- renderable maker.
 --
 function attach_renderable(game_obj, sprite)
 	local renderable = {
@@ -251,33 +251,33 @@ function attach_renderable(game_obj, sprite)
 		palette = nil
 	}
 
-	-- Default rendering function
+	-- default rendering function
 	renderable.render = function(self, position)
 
-		-- Set the palette
+		-- set the palette
 		if (self.palette) then
-			-- Set colours
+			-- set colours
 			for i = 0, 15 do
 				pal(i, self.palette[i + 1])
 			end
 
-			-- Set transparencies
+			-- set transparencies
 			for i = 17, #self.palette do
 				palt(self.palette[i], true)
 			end
 		end
 
-		-- Draw
+		-- draw
 		spr(self.sprite, position.x, position.y, self.sprite_width, self.sprite_height, self.flip_x, self.flip_y)
 
-		-- Reset the palette
+		-- reset the palette
 		if (self.palette) then
 			pal()
 			palt()
 		end
 	end
 
-	-- Save the default render function in case the object wants to use it in an overridden render function.
+	-- save the default render function in case the object wants to use it in an overridden render function.
 	renderable.default_render = renderable.render
 
 	game_obj.renderable = renderable;
@@ -285,7 +285,7 @@ function attach_renderable(game_obj, sprite)
 end
 
 --
--- Create a player
+-- create a player
 function make_player(name, start_x, start_y, sprite, speed, strength)
 	local new_player = make_game_object(name, start_x, start_y)
 	new_player.is_pulling_weed = false
@@ -293,7 +293,7 @@ function make_player(name, start_x, start_y, sprite, speed, strength)
 	new_player.score = 0
 	new_player.weeds_pulled = 0
 
-	-- Animations
+	-- animations
 	local player_anims = {
 		idle = { 1 },
 		pull_weed = { 2, 1 }
@@ -301,15 +301,15 @@ function make_player(name, start_x, start_y, sprite, speed, strength)
 
 	attach_anim_spr_controller(new_player, 4, player_anims, "idle", 0)
 
-	-- Game stats
+	-- game stats
 	new_player.speed = speed
 	new_player.strength = strength
 	attach_renderable(new_player, sprite)
-	new_player.renderable.draw_order = 1	-- Draw player after other in-game objects so he appears in front of weeds
+	new_player.renderable.draw_order = 1	-- draw player after other in-game objects so he appears in front of weeds
 
-	-- Pull a weed
+	-- pull a weed
 	new_player.pull_weed = function(self)
-		local center = self.position.x + (8 / 2)	-- Hardcoded to player width of 8px
+		local center = self.position.x + (8 / 2)	-- hardcoded to player width of 8px
 		local column = g_weed_generator.pixel_to_column(center)
 		local weed = g_weed_generator.get_weed(column)
 
@@ -322,7 +322,7 @@ function make_player(name, start_x, start_y, sprite, speed, strength)
 		self.pulling_weed_elapsed = 0
 	end
 
-	-- Update player
+	-- update player
 	new_player.update = function (self)
 		if self.is_pulling_weed then
 			self.pulling_weed_elapsed += 1
@@ -342,7 +342,7 @@ function make_player(name, start_x, start_y, sprite, speed, strength)
 end
 
 --
--- Create the weed highlighter
+-- create the weed highlighter
 --
 function make_weed_highlighter(owner, sprite)
 	local highlighter = make_game_object("highlighter", 0, -8)
@@ -351,15 +351,15 @@ function make_weed_highlighter(owner, sprite)
 
 	highlighter.update = function (self)
 		local my_center = 8 / 2
-		local owner_center = owner.position.x + (8 / 2)	-- Hardcoded to an owner width of 8px
+		local owner_center = owner.position.x + (8 / 2)	-- hardcoded to an owner width of 8px
 		local column = g_weed_generator.pixel_to_column(owner_center)
 		self.position.x = g_weed_generator.column_to_pixel(column) - my_center
 
 		local weed = g_weed_generator.weeds[column]
 		if weed ~= nil and not is_weed_fully_grown(weed) then
-			self.position.y = weed.position.y - weed.weed.pull_offset - weed.weed.stem_height - 8 - (8 / 2) - 2	-- Draw highlighter above the weed
+			self.position.y = weed.position.y - weed.weed.pull_offset - weed.weed.stem_height - 8 - (8 / 2) - 2	-- draw highlighter above the weed
 		else
-			self.position.y = -8	-- Offscreen
+			self.position.y = -8	-- offscreen
 		end
 	end
 
@@ -369,12 +369,13 @@ function make_weed_highlighter(owner, sprite)
 end
 
 --
--- Weed
+-- weed
 --
-function make_weed(name, sprite, stem_max_height, stem_growth_rate, stem_colour, root_max_height, root_growth_rate, root_colour, reroot_speed)
+function make_weed(name, growth_frames, stem_max_height, stem_growth_rate, stem_colour, root_max_height, root_growth_rate, root_colour, reroot_speed)
 	local weed = make_game_object(name, g_weed_generator.column_to_pixel(column), g_game_config.ground_height)
 
 	weed.weed = {
+		growth_frames = growth_frames,
 		stem_height = 0,
 		stem_max_height = stem_max_height,
 		stem_growth_rate = stem_growth_rate,
@@ -386,12 +387,13 @@ function make_weed(name, sprite, stem_max_height, stem_growth_rate, stem_colour,
 		reroot_speed = reroot_speed,
 		pull_offset = 0,
 	}
-	attach_renderable(weed, sprite)
+	attach_renderable(weed, growth_frames[1])
 
 	--
-	-- Update the weed
+	-- update the weed
 	--
 	weed.update = function (self)
+		-- re-root if pulled partially
 		if self.weed.pull_offset > 0 then
 			self.weed.pull_offset -= self.weed.reroot_speed
 			if self.weed.pull_offset < 0 then
@@ -402,8 +404,22 @@ function make_weed(name, sprite, stem_max_height, stem_growth_rate, stem_colour,
 				self.weed.stem_height += self.weed.stem_growth_rate
 
 				if self.weed.stem_height > self.weed.stem_max_height then
-					self.weed.stem_height = self.weed.stem_max_height				
+					self.weed.stem_height = self.weed.stem_max_height
 				end
+				
+				-- check whether we should show a new growth sprite
+				local growth_frame_threshold = 1
+				if #self.weed.growth_frames > 1 then
+					growth_frame_threshold = 1 / (#self.weed.growth_frames - 1)
+				end
+				
+				local stem_growth_pct = self.weed.stem_height / self.weed.stem_max_height
+				local index = 0
+				while (stem_growth_pct > 0) do
+					stem_growth_pct -= growth_frame_threshold
+					index += 1
+				end
+				self.renderable.sprite = self.weed.growth_frames[index]
 			end
 
 			if self.weed.root_height < self.weed.root_max_height then
@@ -417,21 +433,21 @@ function make_weed(name, sprite, stem_max_height, stem_growth_rate, stem_colour,
 	end
 
 	--
-	-- Custom function for rendering the weed
+	-- custom function for rendering the weed
 	--
 	weed.renderable.render = function(self, position)
 		local weed = self.game_obj.weed
 
 		local adjusted_y_position = position.y - weed.pull_offset;
 
-		-- Draw the stem
+		-- draw the stem
 		line(position.x, adjusted_y_position, position.x, adjusted_y_position - weed.stem_height, weed.stem_colour)
 
-		-- Draw the roots
+		-- draw the roots
 		line(position.x, adjusted_y_position + 1, position.x, adjusted_y_position + 1 + weed.root_height, weed.root_colour)
 
-		-- Draw the flower
-		local flower_position = make_vec2(position.x, adjusted_y_position) - make_vec2(8 / 2, weed.stem_height + 8 / 2)	-- Draw the center of the flower to be at the top of the stem
+		-- draw the flower
+		local flower_position = make_vec2(position.x, adjusted_y_position) - make_vec2(8 / 2, weed.stem_height + 8 / 2)	-- draw the center of the flower to be at the top of the stem
 		self.default_render(self, flower_position)
 	end
 
@@ -439,7 +455,7 @@ function make_weed(name, sprite, stem_max_height, stem_growth_rate, stem_colour,
 end
 
 --
--- Returns true if a weed is at full height
+-- returns true if a weed is at full height
 --
 function is_weed_fully_grown(weed)
 	if weed == nil or weed.weed == nil then
@@ -450,7 +466,7 @@ function is_weed_fully_grown(weed)
 end
 
 --
--- Attempts to pull a weed
+-- attempts to pull a weed
 --
 function pull_weed(weed, amount, puller)
 	if weed == nil or is_weed_fully_grown(weed) then
@@ -459,23 +475,23 @@ function pull_weed(weed, amount, puller)
 
 	weed.weed.pull_offset += amount
 	
-	-- Score increases a bit for the pull.
+	-- score increases a bit for the pull.
 	puller.score += 1
 
 	if (weed.position.y + weed.weed.root_height - weed.weed.pull_offset < g_game_config.ground_height) then
 		g_weed_generator.kill_weed(weed)
 
-		-- Score increases a lot for the extraction.
+		-- score increases a lot for the extraction.
 		puller.score += 10
 		puller.weeds_pulled += 1
 	end
 end
 
 -- 
--- Weed generator
+-- weed generator
 --
 g_weed_generator = {
-	weed_width = 1,	-- Pixels wide per weed. 128 / 4 = 32 weeds per game
+	weed_width = 1,	-- pixels wide per weed. 128 / 4 = 32 weeds per game
 	weeds = {},
 	time_between_weeds = 1,
 	time_until_weed = 0,
@@ -486,7 +502,7 @@ g_weed_generator = {
 }
 
 --
--- Initialize the weed generator
+-- initialize the weed generator
 --
 g_weed_generator.init = function(weed_width, max_weed_height, time_between_weeds)
 	local self = g_weed_generator
@@ -506,7 +522,7 @@ g_weed_generator.init = function(weed_width, max_weed_height, time_between_weeds
 end
 
 --
--- Update the weed generator
+-- update the weed generator
 --
 g_weed_generator.update = function()
 	local self = g_weed_generator
@@ -518,8 +534,8 @@ g_weed_generator.update = function()
 		end
 		self.time_until_weed = self.time_between_weeds
 
-		-- Increase the growth speed if we've generated enough weeds
-		-- Increase the number of weeds generated at once if we've generated enough weeds
+		-- increase the growth speed if we've generated enough weeds
+		-- increase the number of weeds generated at once if we've generated enough weeds
 		if self.generated_weeds % (self.columns() * 2) == 0 then
 			local column_overflow = self.weeds_per_batch - #self.get_available_columns()
 			if column_overflow < 0 then
@@ -533,8 +549,8 @@ g_weed_generator.update = function()
 		end
 	end
 
-	-- @DEBUG summarize
-	local show_debug = true
+	-- @debug summarize
+	local show_debug = false
 	if show_debug then
 		local message = 'weeds: '
 		for i = 1, self.columns() do
@@ -556,7 +572,7 @@ g_weed_generator.update = function()
 end
 
 --
--- Gets the number of weed columns in the game
+-- gets the number of weed columns in the game
 --
 g_weed_generator.columns = function ()
 	return flr(128 / g_weed_generator.weed_width)
@@ -575,31 +591,36 @@ g_weed_generator.get_available_columns = function ()
 end
 
 --
--- Gets the weed at a column if there is one. If not, returns nil.
+-- gets the weed at a column if there is one. if not, returns nil.
 g_weed_generator.get_weed = function (column) 
 	return g_weed_generator.weeds[column]
 end
 
 --
--- Generates a weed in an open column
+-- generates a weed in an open column
 --
 g_weed_generator.generate_weed = function ()
 	local self = g_weed_generator
 
-	-- Find available columns
+	-- find available columns
 	available_cols = self.get_available_columns()
 
-	-- Don't generate a weed if there's no space left
+	-- don't generate a weed if there's no space left
 	if #available_cols == 0 then
 		return
 	end
 
-	-- Choose a column at random
+	-- choose a column at random
 	local index = flr(rnd(#available_cols)) + 1
 	column = available_cols[index]
 
-	-- Generate random params
-	local sprite = 32
+	-- generate random params
+	local growth_frames = {
+		{32, 33, 34, 35},
+		{32, 36, 37, 38},
+		{32, 39, 40, 41},
+	}
+	local growth_frame_index = 1 + flr(rnd(#growth_frames))
 	
 	local stem_max_height =  self.max_weed_height
 	local stem_growth_rate = self.base_growth_rate + rnd(20) / 100
@@ -611,8 +632,8 @@ g_weed_generator.generate_weed = function ()
 
 	local reroot_speed = 0.01 + flr(rnd(10)) / 100
 
-	-- Construct the weed
-	local weed = make_weed("weed-"..column, sprite, stem_max_height, stem_growth_rate, stem_colour, root_max_height, root_growth_rate, root_colour, reroot_speed)
+	-- construct the weed
+	local weed = make_weed("weed-"..column, growth_frames[growth_frame_index], stem_max_height, stem_growth_rate, stem_colour, root_max_height, root_growth_rate, root_colour, reroot_speed)
 	self.weeds[column] = weed
 	add(scene, weed)
 
@@ -620,7 +641,7 @@ g_weed_generator.generate_weed = function ()
 end
 
 -- 
--- Kills a weed
+-- kills a weed
 --
 g_weed_generator.kill_weed = function (weed)
 	local self = g_weed_generator;
@@ -648,29 +669,29 @@ g_weed_generator.are_all_weeds_grown = function ()
 end
 
 --
--- Gets the worldspace x-coordinate associated with a weed column
+-- gets the worldspace x-coordinate associated with a weed column
 --
 g_weed_generator.column_to_pixel = function(column)
 	return (column - 1) * g_weed_generator.weed_width + flr(g_weed_generator.weed_width / 2)
 end
 
 --
--- Gets the column that contains a worldspace x-coordinate
+-- gets the column that contains a worldspace x-coordinate
 --
 g_weed_generator.pixel_to_column = function(x)
 	return flr(x / g_weed_generator.weed_width) + 1
 end
 
 --
--- Renderer subsystem
+-- renderer subsystem
 --
 g_renderer = {}
 
 --
--- Main render pipeline
+-- main render pipeline
 --
 g_renderer.render = function()
-	-- Collect renderables 
+	-- collect renderables 
 	local renderables = {};
 	for game_obj in all(scene) do
 		if (game_obj.renderable) then
@@ -678,10 +699,10 @@ g_renderer.render = function()
 		end
 	end
 
-	-- Sort by draw-order
+	-- sort by draw-order
 	quicksort_draw_order(renderables)
 
-	-- Draw the scene
+	-- draw the scene
 	camera_draw_start(main_camera)
 	
 	map(0, 0, 0, 0, 128, 128) -- draw the whole map and let the clipping region remove unnecessary bits
@@ -695,14 +716,14 @@ end
 
 
 --
--- Sort a renderable array by draw-order
+-- sort a renderable array by draw-order
 -- 
 function quicksort_draw_order(list)
 	quicksort_draw_order_helper(list, 1, #list)
 end
 
 --
--- Helper function for sorting renderables by draw-order
+-- helper function for sorting renderables by draw-order
 function quicksort_draw_order_helper(list, low, high)
 	if (low < high) then
 		local p = quicksort_draw_order_partition(list, low, high)
@@ -712,7 +733,7 @@ function quicksort_draw_order_helper(list, low, high)
 end
 
 --
--- Partition a renderable list by draw_order
+-- partition a renderable list by draw_order
 --
 function quicksort_draw_order_partition(list, low, high)
 	local pivot = list[high]
@@ -737,7 +758,7 @@ function quicksort_draw_order_partition(list, low, high)
 end
 
 --
--- Camera
+-- camera
 --
 function make_camera(draw_x, draw_y, draw_width, draw_height, shoot_x, shoot_y)
 	local t = {
@@ -767,7 +788,7 @@ end
 
 
 --
--- Animated sprite controller
+-- animated sprite controller
 --
 function attach_anim_spr_controller(game_obj, frames_per_cell, animations, start_anim, start_frame_offset)
 	game_obj.anim_controller = {
@@ -809,7 +830,7 @@ function set_anim_spr_animation(controller, animation)
 end
 
 --
--- 2d Vector
+-- 2d vector
 --
 local vec2_meta = {}
 function vec2_meta.__add(a, b)
@@ -861,7 +882,7 @@ function vec2_str(v)
 end
 
 --
--- Log subsystem
+-- log subsystem
 --
 g_log = {
 	show_debug = true,
@@ -869,14 +890,14 @@ g_log = {
 }
 
 --
--- Logs a message
+-- logs a message
 --
 g_log.log = function(message)
 	add(g_log.log_data, message)
 end
 
 --
--- Renders the log
+-- renders the log
 --
 g_log.render = function()
 	if (g_log.show_debug) then
@@ -888,7 +909,7 @@ g_log.render = function()
 end
 
 --
--- Clears the log
+-- clears the log
 --
 g_log.clear = function()
 	g_log.log_data = {}
@@ -910,14 +931,14 @@ __gfx__
 4444444444444444cccccccc00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 4444444444444444cccccccc00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 4444444444444444cccccccc00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-08800880000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-88800888000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-88822888000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00222200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00222200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-88822888000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-88833888000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-08833880000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+000000000000000000000000088008800000000000000000000ee000000000000000000000000000000000000000000000000000000000000000000000000000
+0000000000000000088008808880088800000000000aa00000eaae00000000000000000080088008000000000000000000000000000000000000000000000000
+000000000002200008822880888228880009900000a99a000ea99ae0000000000a0aa0a08a8aa8a8000000000000000000000000000000000000000000000000
+00000000002222000022220000222200009999000a9999a0ea9999ae000ee0000aaeeaa08aaeeaa8000000000000000000000000000000000000000000000000
+00033000002222000022220000222200009999000a9999a0ea9999ae00eeee000aeeeea08aeeeea8000000000000000000000000000000000000000000000000
+003333000002200008822880888228880009900000a99a000ea99ae0000ee00000aeea0008aeea80000000000000000000000000000000000000000000000000
+0003300000033000088338808883388800033000000aa00000eaae0000033000000aa000008aa800000000000000000000000000000000000000000000000000
+000330000003300000033000088338800003300000033000000ee000000330000003300000088000000000000000000000000000000000000000000000000000
 000dd000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 000dd000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 000dd000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000

@@ -368,10 +368,11 @@ end
 --
 -- Weed
 --
-function make_weed(name, sprite, stem_max_height, stem_growth_rate, stem_colour, root_max_height, root_growth_rate, root_colour, reroot_speed)
+function make_weed(name, growth_frames, stem_max_height, stem_growth_rate, stem_colour, root_max_height, root_growth_rate, root_colour, reroot_speed)
 	local weed = make_game_object(name, g_weed_generator.column_to_pixel(column), g_game_config.ground_height)
 
 	weed.weed = {
+		growth_frames = growth_frames,
 		stem_height = 0,
 		stem_max_height = stem_max_height,
 		stem_growth_rate = stem_growth_rate,
@@ -383,12 +384,13 @@ function make_weed(name, sprite, stem_max_height, stem_growth_rate, stem_colour,
 		reroot_speed = reroot_speed,
 		pull_offset = 0,
 	}
-	attach_renderable(weed, sprite)
+	attach_renderable(weed, growth_frames[1])
 
 	--
 	-- Update the weed
 	--
 	weed.update = function (self)
+		-- Re-root if pulled partially
 		if self.weed.pull_offset > 0 then
 			self.weed.pull_offset -= self.weed.reroot_speed
 			if self.weed.pull_offset < 0 then
@@ -399,8 +401,22 @@ function make_weed(name, sprite, stem_max_height, stem_growth_rate, stem_colour,
 				self.weed.stem_height += self.weed.stem_growth_rate
 
 				if self.weed.stem_height > self.weed.stem_max_height then
-					self.weed.stem_height = self.weed.stem_max_height				
+					self.weed.stem_height = self.weed.stem_max_height
 				end
+				
+				-- Check whether we should show a new growth sprite
+				local growth_frame_threshold = 1
+				if #self.weed.growth_frames > 1 then
+					growth_frame_threshold = 1 / (#self.weed.growth_frames - 1)
+				end
+				
+				local stem_growth_pct = self.weed.stem_height / self.weed.stem_max_height
+				local index = 0
+				while (stem_growth_pct > 0) do
+					stem_growth_pct -= growth_frame_threshold
+					index += 1
+				end
+				self.renderable.sprite = self.weed.growth_frames[index]
 			end
 
 			if self.weed.root_height < self.weed.root_max_height then
@@ -531,7 +547,7 @@ g_weed_generator.update = function()
 	end
 
 	-- @DEBUG summarize
-	local show_debug = true
+	local show_debug = false
 	if show_debug then
 		local message = 'weeds: '
 		for i = 1, self.columns() do
@@ -596,7 +612,12 @@ g_weed_generator.generate_weed = function ()
 	column = available_cols[index]
 
 	-- Generate random params
-	local sprite = 32
+	local growth_frames = {
+		{32, 33, 34, 35},
+		{32, 36, 37, 38},
+		{32, 39, 40, 41},
+	}
+	local growth_frame_index = 1 + flr(rnd(#growth_frames))
 	
 	local stem_max_height =  self.max_weed_height
 	local stem_growth_rate = self.base_growth_rate + rnd(20) / 100
@@ -609,7 +630,7 @@ g_weed_generator.generate_weed = function ()
 	local reroot_speed = 0.01 + flr(rnd(10)) / 100
 
 	-- Construct the weed
-	local weed = make_weed("weed-"..column, sprite, stem_max_height, stem_growth_rate, stem_colour, root_max_height, root_growth_rate, root_colour, reroot_speed)
+	local weed = make_weed("weed-"..column, growth_frames[growth_frame_index], stem_max_height, stem_growth_rate, stem_colour, root_max_height, root_growth_rate, root_colour, reroot_speed)
 	self.weeds[column] = weed
 	add(scene, weed)
 

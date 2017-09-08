@@ -34,7 +34,7 @@ Essential
 . Game restart
 . Player drawn in front of weeds
 - Difficulty over time
-	- If not enough open columns to increase weeds / batch, increase growth rate
+	. If not enough open columns to increase weeds / batch, increase growth rate
 	- Score multiplier for chaining different columns?
 	- Score multiplier for stalling plants?
 - Balance
@@ -45,9 +45,9 @@ Important
 . Title screen
 . Track weeds pulled in addition to score
 . Disable debug text
+. Weed top becomes bigger as it gets taller
 - Animated player walk
-- Weed top becomes bigger as it gets taller
-- Multiple 'tops' of weeds (aesthetic only)
+. Multiple 'tops' of weeds (aesthetic only)
 - Sound FX for weed pull
 
 Nice-to-have
