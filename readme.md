@@ -46,13 +46,13 @@ Important
 . Track weeds pulled in addition to score
 . Disable debug text
 . Weed top becomes bigger as it gets taller
-- Animated player walk
 . Multiple 'tops' of weeds (aesthetic only)
-- Sound FX for weed pull
+. Animated player walk
 
 Nice-to-have
 . Gradient static sky
 . More varied ground map
+- Sound FX for weed pull
 - Multiple types / grow patterns for weeds
 - Powerup: Faster weed pulling
 - Powerup: Faster movement

@@ -108,13 +108,13 @@ ingame_state = {
 
 	update = function(self)
 		-- Process input
-		player_movement = make_vec2(0, 0)
+		player.velocity = make_vec2(0, 0)
 		if btn(0) then
-			player_movement.x -= player.speed
+			player.velocity.x -= player.speed
 		end
 
 		if btn(1) then
-			player_movement.x += player.speed
+			player.velocity.x += player.speed
 		end
 
 		if btnp(4) then
@@ -123,17 +123,6 @@ ingame_state = {
 
 		if btn(5) then
 			-- @TODO Activate Powerup
-		end
-
-		-- Process player movement changes
-		player.position += player_movement
-
-		-- Keep the player inside the screen bounds
-		local player_width = 8
-		if player.position.x < 0 then
-			player.position.x = 0
-		elseif player.position.x + player_width > 127 then
-			player.position.x = 127 - player_width
 		end
 
 		-- Update weed generator
@@ -289,11 +278,13 @@ function make_player(name, start_x, start_y, sprite, speed, strength)
 	new_player.pulling_weed_elapsed = 0
 	new_player.score = 0
 	new_player.weeds_pulled = 0
+	new_player.velocity = make_vec2(0, 0)
 
 	-- Animations
 	local player_anims = {
 		idle = { 1 },
-		pull_weed = { 2, 1 }
+		pull_weed = { 2, 1 },
+		walk = { 3, 4 }
 	}
 
 	attach_anim_spr_controller(new_player, 4, player_anims, "idle", 0)
@@ -328,6 +319,26 @@ function make_player(name, start_x, start_y, sprite, speed, strength)
 			if self.pulling_weed_elapsed > pulling_weed_duration then
 				self.is_pulling_weed = false
 				set_anim_spr_animation(self.anim_controller, 'idle')
+			end
+		else
+			self.position += self.velocity
+			if self.velocity.x < 0 then
+				self.renderable.flip_x = true
+				set_anim_spr_animation(self.anim_controller, 'walk')
+			elseif self.velocity.x > 0 then
+				self.renderable.flip_x = false
+				set_anim_spr_animation(self.anim_controller, 'walk')
+			elseif self.velocity.x == 0 then
+				self.renderable.flip_x = false
+				set_anim_spr_animation(self.anim_controller, 'idle')
+			end
+
+			-- Keep the player inside the screen bounds
+			local player_width = 8
+			if self.position.x < 0 then
+				self.position.x = 0
+			elseif self.position.x + player_width > 127 then
+				self.position.x = 127 - player_width
 			end
 		end
 
@@ -821,9 +832,11 @@ function update_anim_spr_controller(controller, game_obj)
 end
 
 function set_anim_spr_animation(controller, animation)
-	controller.current_frame = 0
-	controller.current_cell = 1
-	controller.current_animation = animation
+	if controller.current_animation != animation then
+		controller.current_frame = 0
+		controller.current_cell = 1
+		controller.current_animation = animation
+	end
 end
 
 --
