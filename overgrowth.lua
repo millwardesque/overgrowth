@@ -92,6 +92,10 @@ ingame_state = {
 		-- Make the camera
 		main_camera = make_camera(0, 0, 128, 128, 0, 0)
 
+		-- clouds
+		g_cloud_generator.init(180)
+		g_cloud_generator.generate_cloud()
+
 		-- Weeds
 		g_weed_generator.init(16, 32, 60) 
 		g_weed_generator.generate_weed()
@@ -121,9 +125,8 @@ ingame_state = {
 			player.pull_weed(player)
 		end
 
-		if btn(5) then
-			-- @TODO Activate Powerup
-		end
+		-- Update clouds.
+		g_cloud_generator.update()
 
 		-- Update weed generator
 		g_weed_generator.update()
@@ -689,6 +692,86 @@ end
 g_weed_generator.pixel_to_column = function(x)
 	return flr(x / g_weed_generator.weed_width) + 1
 end
+
+--
+-- Makes a cloud
+--
+function make_cloud(name, pos_x, pos_y, sprite, velocity)
+	local new_cloud = make_game_object(name, pos_x, pos_y)
+	new_cloud.velocity = velocity
+
+	attach_renderable(new_cloud, sprite)
+	new_cloud.renderable.draw_order = -1	-- Draw clouds behind other scene objects
+
+	new_cloud.update = function (self)
+		self.position += self.velocity
+
+		-- @TODO Destroy when offscreen
+	end
+
+	return new_cloud
+end
+
+--
+-- Cloud generator
+--
+g_cloud_generator = {
+	time_between_clouds = 60,
+	min_speed = 0.1,
+	max_speed = 0.4,
+	min_y = 0,
+	max_y = 24,
+	generated_clouds = 0
+}
+
+--
+-- Initialize the cloud generator
+--
+g_cloud_generator.init = function(time_between_clouds)
+	g_cloud_generator.time_between_clouds = time_between_clouds
+	g_cloud_generator.time_until_cloud = time_between_clouds
+end
+
+g_cloud_generator.update = function()
+	local self = g_cloud_generator
+	self.time_until_cloud -= 1
+
+	if self.time_until_cloud == 0 then
+		add(scene, self.generate_cloud())
+		self.time_until_cloud = self.time_between_clouds
+	end
+end
+
+g_cloud_generator.generate_cloud = function()
+	local self = g_cloud_generator
+
+	-- @TODO Position offscreen
+	-- @TODO Pick velocity
+
+	self.generated_clouds += 1
+	local name = 'cloud-'..self.generated_clouds
+
+	local start_on_right = (flr(rnd(2)) == 0)
+
+	local pos_x = -8
+	if start_on_right then
+		pos_x = 128
+	end
+
+	local pos_y = g_cloud_generator.min_y + flr(rnd(g_cloud_generator.max_y - g_cloud_generator.min_y))
+	
+	local sprites = { 60, 61 }
+	local sprite_index = 1 + flr(rnd(#sprites))
+	local sprite = sprites[sprite_index]
+
+	local velocity = make_vec2(g_cloud_generator.min_speed + rnd(g_cloud_generator.max_speed - g_cloud_generator.min_speed), 0)
+	if start_on_right then
+		velocity.x *= -1
+	end
+
+	return make_cloud(name, pos_x, pos_y, sprite, velocity)
+end
+
 
 --
 -- Renderer subsystem

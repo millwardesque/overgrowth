@@ -51,6 +51,7 @@ Important
 
 Nice-to-have
 . Gradient static sky
+. Animated background elements (clouds, etc.)
 . More varied ground map
 - Sound FX for weed pull
 - Multiple types / grow patterns for weeds
@@ -65,6 +66,5 @@ Nice-to-have
 - Animated roots
 - Powerup: Flame thrower
 - Powerup: Lawn mower
-- Animated background elements (clouds, etc.)
 - Weed root branching underground
 - Background music
